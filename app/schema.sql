@@ -4,8 +4,8 @@ DROP TABLE IF EXISTS d_scores;
 CREATE TABLE d_user (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
-  first_name TEXT NOT NULL,
-  password TEXT NOT NULL
+  password TEXT NOT NULL,
+  first_name TEXT NOT NULL
 );
 
 CREATE TABLE d_match (
