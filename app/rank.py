@@ -11,6 +11,7 @@ rank = Blueprint('rank', __name__)
 
 
 @rank.route('/', methods=['GET'])
+@login_required
 def index():
     # index page is the ranking
 
@@ -23,6 +24,7 @@ def index():
 
 
 @rank.route('/update', methods=['GET', 'POST'])
+@login_required
 def update():
     # add a new score
     if request.method == 'POST':
@@ -31,5 +33,6 @@ def update():
 
 
 @rank.route('/profile', methods=['GET'])
+@login_required
 def profile():
     return
