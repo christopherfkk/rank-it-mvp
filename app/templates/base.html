@@ -3,6 +3,7 @@
 <!doctype html>
 <title>{% block title %}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
 <nav>
   <h1>RankIt</h1>
   <ul>
@@ -15,12 +16,13 @@
     {% endif %}
   </ul>
 </nav>
+
 <section class="content">
   <header>
     {% block header %}{% endblock %}
   </header>
+  {% block content %}{% endblock %}
   {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
   {% endfor %}
-  {% block content %}{% endblock %}
 </section>
