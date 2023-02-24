@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block header %}{% endblock %}
+<h1>{% block title %}Ranking{% endblock %}</h1>
+
+{% block content %}
+  {% for player in ranking %}
+    <p>{{ player.rank }}. {{ player.name }}</p>
+  {% endfor %}
+{% endblock %}
