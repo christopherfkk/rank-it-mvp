@@ -86,7 +86,7 @@ def load_logged_in_user():
 @auth.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    return redirect(url_for('auth.login'))
 
 
 # Decorator definition for views

@@ -1,15 +1,20 @@
 <!--g, url_fo(), get_flashed_messages is automatically available in templates-->
 
 <!doctype html>
-<title>{% block title %}{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}1{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 
 <nav>
   <h1>RankIt</h1>
   <ul>
     {% if g.user %}
-      <li><span>{{ g.user['username'] }}</span>
-      <li><a href="{{ url_for('auth.logout') }}">Log Out</a>
+      <li><a href="{{ url_for('rank.index') }}">Ranking</a>
+      <li><a href="{{ url_for('rank.update') }}">Add score</a>
+      <li><a href="{{ url_for('rank.profile') }}">Profile</a>
+      <li><a href="{{ url_for('auth.logout') }}">Log out</a>
     {% else %}
       <li><a href="{{ url_for('auth.register') }}">Register</a>
       <li><a href="{{ url_for('auth.login') }}">Log In</a>
@@ -19,7 +24,7 @@
 
 <section class="content">
   <header>
-    {% block header %}{% endblock %}
+    {% block header %} {% endblock %}
   </header>
   {% block content %}{% endblock %}
   {% for message in get_flashed_messages() %}

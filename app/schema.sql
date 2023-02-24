@@ -25,3 +25,9 @@ CREATE TABLE d_score (
   FOREIGN KEY (match_id) REFERENCES d_match (id),
   FOREIGN KEY (user_id) REFERENCES d_user (id)
 );
+
+CREATE TABLE d_ranking (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL
+--   FOREIGN KEY (user_id) REFERENCES d_user (id)
+);
