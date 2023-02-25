@@ -6,6 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import trueskill
 
 from app.db import get_db
+from app.rating.rating import init_user_rating
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -16,9 +17,9 @@ def register():
         username = request.form['username']
         password = request.form['password']
         first_name = request.form['first_name']
+
         db = get_db()
         error = None
-
         if not username:
             error = 'Username is required.'
         elif not password:
@@ -37,8 +38,7 @@ def register():
                 db.commit()
 
                 # Insert into d_ranking with default user
-                new_user = trueskill.Rating()
-                init_skill, init_uncertainty = new_user.mu, new_user.sigma
+                init_skill, init_uncertainty = init_user_rating()
 
                 # Get the recently-committed new user entry
                 user = db.execute(
