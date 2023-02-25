@@ -13,8 +13,12 @@ CREATE TABLE d_user (
 
 CREATE TABLE d_match (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  self_user_id INTEGER NOT NULL,
+  opponent_user_id INTEGER NOT NULL,
   type TEXT NOT NULL DEFAULT 'Singles',
-  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (self_user_id) REFERENCES d_user (id),
+  FOREIGN KEY (opponent_user_id) REFERENCES d_user (id)
 );
 
 CREATE TABLE d_score (
