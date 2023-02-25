@@ -55,10 +55,10 @@ def update():
         elif self_score == opp_score:
             error = "Game result cannot be a draw."
 
-        self_score, opp_score = int(self_score), int(opp_score)
-
         # Query their id, current skill, current uncertainty
         if error is None:
+
+            self_score, opp_score = int(self_score), int(opp_score)
 
             self_ = db.execute(
                 """
@@ -140,4 +140,28 @@ def update():
 @rank.route('/profile', methods=['GET'])
 @login_required
 def profile():
-    return
+
+    user_id = g.user['id']
+    db = get_db()
+
+    games_played = db.execute(
+        """
+        SELECT COUNT(*) as count
+        FROM d_score
+        WHERE
+        user_id = ?;
+        """,
+        (user_id,)
+    ).fetchone()['count']
+
+    history = db.execute(
+        """
+        SELECT is_winner, COUNT(is_winner) AS count
+        FROM d_score
+        WHERE user_id = ?
+        GROUP BY is_winner;
+        """,
+        (user_id,)
+    ).fetchall()
+    lost, won = history[0]["count"], history[1]["count"]
+    return render_template('rank/profile.html', games_played=games_played, lost=lost, won=won)

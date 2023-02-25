@@ -1,4 +1,4 @@
-<!--g, url_fo(), get_flashed_messages is automatically available in templates-->
+<!--g, url_for(), get_flashed_messages is automatically available in templates-->
 
 <!doctype html>
 <head>
@@ -14,7 +14,6 @@
       <li><a href="{{ url_for('rank.index') }}">Ranking</a>
       <li><a href="{{ url_for('rank.update') }}">Add score</a>
       <li><a href="{{ url_for('rank.profile') }}">Profile</a>
-      <li><a href="{{ url_for('auth.logout') }}">Log out</a>
     {% else %}
       <li><a href="{{ url_for('auth.register') }}">Register</a>
       <li><a href="{{ url_for('auth.login') }}">Log In</a>

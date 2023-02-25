@@ -1,0 +1,19 @@
+<!--tells Jinja that this template should replace the blocks from the base template-->
+{% extends 'base.html' %}
+
+<!--Nesting block title in block header changes both at the same time-->
+{% block header %}{% endblock %}
+<h1>{% block title %}Profile{% endblock %}</h1>
+
+
+{% block content %}
+{% if g.user %}
+<h3> Welcome, <em>{{ g.user["first_name"] }}</em>. Here's your summary. </h3>
+<ul>
+    <li> You played <b><em> {{ games_played }} </em></b> games.</li>
+    <li> You won <b><em>{{ won }}</em></b> and lost <b><em>{{ lost }}</em></b> games. </li>
+</ul>
+<p><a href="{{ url_for('auth.logout') }}">Log out</a><p>
+    {% else %}
+{% endif %}
+{% endblock %}
