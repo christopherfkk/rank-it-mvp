@@ -5,6 +5,6 @@
 
 {% block content %}
   {% for player in ranking %}
-    <p>{{ player.rank }}. {{ player.name }}</p>
+    <p>{{ loop.index }}. {{ player.name }}, {{ player.skill }}, {{ player.uncertainty }}</p>
   {% endfor %}
 {% endblock %}

@@ -3,6 +3,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+import trueskill
 
 from app.db import get_db
 
@@ -27,15 +28,38 @@ def register():
 
         if error is None:
             try:
+
+                # Insert into d_user
                 db.execute(
                     "INSERT INTO d_user (username, password, first_name) VALUES (?, ?, ?)",
                     (username, generate_password_hash(password), first_name),
                 )
                 db.commit()
+
+                # Insert into d_ranking with default user
+                new_user = trueskill.Rating()
+                init_skill, init_uncertainty = new_user.mu, new_user.sigma
+
+                # Get the recently-committed new user entry
+                user = db.execute(
+                    'SELECT * FROM d_user WHERE username = ?', (username,)
+                ).fetchone()
+
+                # Insert into the d_skill with initialized TrueSkill rating
+                db.execute(
+                    "INSERT INTO d_skill (user_id, skill, uncertainty) VALUES (?, ?, ?)",
+                    (user['id'], init_skill, init_uncertainty),
+                )
+                db.commit()
+
             except db.IntegrityError:
                 error = f"User {username} is already registered."
             else:
-                return redirect(url_for("auth.login"))
+
+                # Directly logs in
+                session.clear()
+                session['user_id'] = user['id']
+                return redirect(url_for('index'))
 
         flash(error)
 
