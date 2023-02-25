@@ -7,13 +7,18 @@
 
 
 {% block content %}
-{% if g.user %}
+{% if g.user['id'] == user_id %}
 <h3> Welcome, <em>{{ g.user["first_name"] }}</em>. Here's your summary. </h3>
 <ul>
     <li> You played <b><em> {{ games_played }} </em></b> games.</li>
     <li> You won <b><em>{{ won }}</em></b> and lost <b><em>{{ lost }}</em></b> games. </li>
 </ul>
 <p><a href="{{ url_for('auth.logout') }}">Log out</a><p>
-    {% else %}
+{% else %}
+<h3> Viewing <em>{{ username }}</em>'s summary. </h3>
+<ul>
+    <li><b><em>{{ username }}</em></b> played <b><em> {{ count }} </em></b> games.</li>
+    <li><b><em>{{ username }}</em></b> won <b><em>{{ won }}</em></b> and lost <b><em>{{ lost }}</em></b> games. </li>
+</ul>
 {% endif %}
 {% endblock %}

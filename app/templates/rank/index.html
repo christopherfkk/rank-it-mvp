@@ -5,6 +5,10 @@
 
 {% block content %}
   {% for player in ranking %}
-    <p>{{ loop.index }}. {{ player.name }}, {{ (player.skill)|round(2) }}, {{ (player.uncertainty)|round(2) }}</p>
+    {% if g.user['id'] == player.user_id %}
+    <b><em><p>{{ loop.index }}. <a href="{{ url_for('rank.profile', user_id=player.user_id) }}">{{ player.name }}</a>, {{ (player.skill)|round(2) }}, {{ (player.uncertainty)|round(2) }}</p></em></b>
+    {% else %}
+    <p>{{ loop.index }}. <a href="{{ url_for('rank.profile', user_id=player.user_id) }}">{{ player.name }}</a>, {{ (player.skill)|round(2) }}, {{ (player.uncertainty)|round(2) }}</p>
+    {% endif %}
   {% endfor %}
 {% endblock %}

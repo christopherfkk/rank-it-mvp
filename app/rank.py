@@ -18,7 +18,7 @@ def index():
     db = get_db()
     ranking = db.execute(
         """
-        SELECT du.username as name, ds.skill as skill, ds.uncertainty as uncertainty 
+        SELECT du.id as user_id, du.username as name, ds.skill as skill, ds.uncertainty as uncertainty 
         FROM d_skill ds 
         JOIN d_user du 
             ON ds.user_id = du.id 
@@ -137,22 +137,23 @@ def update():
     return render_template('rank/update.html')
 
 
-@rank.route('/profile', methods=['GET'])
+@rank.route('/profile/<int:user_id>', methods=['GET'])
 @login_required
-def profile():
+def profile(user_id):
 
-    user_id = g.user['id']
     db = get_db()
 
     games_played = db.execute(
         """
-        SELECT COUNT(*) as count
-        FROM d_score
+        SELECT du.username as username, COUNT(*) as count
+        FROM d_score ds
+        JOIN d_user du ON du.id = ds.user_id
         WHERE
         user_id = ?;
         """,
         (user_id,)
-    ).fetchone()['count']
+    ).fetchone()
+    username, count = games_played['username'], games_played['count']
 
     history = db.execute(
         """
@@ -164,4 +165,4 @@ def profile():
         (user_id,)
     ).fetchall()
     lost, won = history[0]["count"], history[1]["count"]
-    return render_template('rank/profile.html', games_played=games_played, lost=lost, won=won)
+    return render_template('rank/profile.html', user_id=user_id, username=username, games_played=count, lost=lost, won=won)
