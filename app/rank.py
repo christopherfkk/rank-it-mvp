@@ -96,67 +96,63 @@ def add_score():
     return render_template('rank/add_score.html')
 
 
-@rank.route('/approve-score/<int:match_id>/<int:self_score_id>', methods=['GET'])
+@rank.route('/approve-score/<int:match_id>/<int:self_score_id>/<int:opp_score_id>', methods=['GET'])
 @login_required
-def approve_score(match_id, self_score_id):
-    print(match_id)
+def approve_score(match_id, self_score_id, opp_score_id):
+
+    # Update d_score
+    db = get_db()
+    db.execute("""UPDATE d_score SET is_reviewed = 1 WHERE id = ?""",(self_score_id, ))
+
+    # Update d_match
+    db.execute("""UPDATE d_match SET is_reviewed = 1 WHERE id = ?""", (match_id,))
+
+    # Update d_skill
+    # Query player 1's user id, current skill, current uncertainty
+    self_ = db.execute(
+        """
+        SELECT du.id as user_id, dsk.skill as skill, dsk.uncertainty as uncertainty, dsc.score as score
+        FROM d_user as du
+        JOIN d_skill dsk on du.id = dsk.user_id
+        JOIN d_score dsc on du.id = dsc.user_id 
+        WHERE du.id = ? AND dsc.id = ?
+        """,
+        (g.user["id"], self_score_id)
+    ).fetchone()
+
+    # Query player 2's user id, current skill, current uncertainty
+    opp_ = db.execute(
+        """
+        SELECT du.id as user_id, dsk.skill as skill, dsk.uncertainty as uncertainty, dsc.score as score
+        FROM d_user as du
+        JOIN d_skill dsk on du.id = dsk.user_id
+        JOIN d_score dsc on du.id = dsc.user_id 
+        WHERE dsc.id = ?
+        """,
+        (opp_score_id,)
+    ).fetchone()
+
+    # Get player 1's and player 2's Rating (i.e. mu = skill, sigma = uncertainty)
+    self_id, self_mu, self_sigma, self_score = self_["user_id"], self_["skill"], self_["uncertainty"], self_["score"]
+    opp_id, opp_mu, opp_sigma, opp_score = opp_["user_id"], opp_["skill"], opp_["uncertainty"], opp_["score"]
+
+    # Update their rating
+    new_self_mu, new_self_sigma, new_opp_mu, new_opp_sigma = update_rating(
+        self_mu, self_sigma, self_score,
+        opp_mu, opp_sigma, opp_score
+    )
+
+    # Update d_skill table with player 1
+    db.execute("""UPDATE d_skill SET skill = ?, uncertainty = ? WHERE user_id = ?""",
+               (new_self_mu, new_self_sigma, self_id))
+    db.commit()
+
+    # Update d_skill table with player 1
+    db.execute("""UPDATE d_skill SET skill = ?, uncertainty = ? WHERE user_id = ?""",
+               (new_opp_mu, new_opp_sigma, opp_id))
+    db.commit()
+
     return redirect(url_for('rank.index'))
-
-    if request.method == 'POST':
-
-        # Query player 1's user id, current skill, current uncertainty
-        self_ = db.execute(
-            """
-            SELECT du.id as user_id, ds.skill as skill, ds.uncertainty as uncertainty
-            FROM d_user as du
-            JOIN d_skill ds on du.id = ds.id
-            WHERE du.id = ?
-            """,
-            (g.user["id"],)
-        ).fetchone()
-
-        # Query player 2's user id, current skill, current uncertainty
-        opp_ = db.execute(
-            """
-            SELECT du.id as user_id, ds.skill as skill, ds.uncertainty as uncertainty
-            FROM d_user as du
-            JOIN d_skill ds on du.id = ds.id
-            WHERE du.username = ?
-            """,
-            (opp_username,)
-        ).fetchone()
-
-        # Get player 1's and player 2's Rating (i.e. mu = skill, sigma = uncertainty)
-        self_id, self_mu, self_sigma = self_["user_id"], self_["skill"], self_["uncertainty"]
-        opp_id, opp_mu, opp_sigma = opp_["user_id"], opp_["skill"], opp_["uncertainty"]
-
-        # Update their rating
-        new_self_mu, new_self_sigma, new_opp_mu, new_opp_sigma = update_rating(
-            self_mu, self_sigma, self_score,
-            opp_mu, opp_sigma, opp_score
-        )
-
-        # Update d_skill table with player 1
-        db.execute(
-            """
-            UPDATE d_skill
-            SET skill = ?, uncertainty = ?
-            WHERE user_id = ?
-            """,
-            (new_self_mu, new_self_sigma, self_id),
-        )
-        db.commit()
-
-        # Update d_skill table with player 1
-        db.execute(
-            """
-            UPDATE d_skill
-            SET skill = ?, uncertainty = ?
-            WHERE user_id = ?
-            """,
-            (new_opp_mu, new_opp_sigma, opp_id),
-        )
-        db.commit()
 
 
 @rank.route('/profile/<int:user_id>', methods=['GET'])
