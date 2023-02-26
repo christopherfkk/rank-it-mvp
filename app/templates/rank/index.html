@@ -4,11 +4,32 @@
 <h1>{% block title %}Ranking{% endblock %}</h1>
 
 {% block content %}
-  {% for player in ranking %}
-    {% if g.user['id'] == player.user_id %}
-    <b><em><p>{{ loop.index }}. <a href="{{ url_for('rank.profile', user_id=player.user_id) }}">{{ player.name }}</a>, {{ (player.skill)|round(2) }}, {{ (player.uncertainty)|round(2) }}</p></em></b>
-    {% else %}
-    <p>{{ loop.index }}. <a href="{{ url_for('rank.profile', user_id=player.user_id) }}">{{ player.name }}</a>, {{ (player.skill)|round(2) }}, {{ (player.uncertainty)|round(2) }}</p>
-    {% endif %}
-  {% endfor %}
+
+<table>
+    <thead>
+      <th>Rank</th>
+      <th>Username</th>
+      <th>Skill</th>
+      <th>Uncertainty</th>
+    </thead>
+    <tbody>
+        {% for player in ranking %}
+            {% if g.user['id'] == player.user_id %}
+            <tr style="background-color: lightpink">
+                <td>{{ loop.index }}</td>
+                <td><a href="{{ url_for('rank.profile', user_id=player.user_id) }}">{{ player.name }}</a></td>
+                <td>{{ (player.skill)|round(2) }}</td>
+                <td>{{ (player.uncertainty)|round(2) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><a href="{{ url_for('rank.profile', user_id=player.user_id) }}">{{ player.name }}</a></td>
+                <td>{{ (player.skill)|round(2) }}</td>
+                <td>{{ (player.uncertainty)|round(2) }}</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

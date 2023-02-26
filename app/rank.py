@@ -93,7 +93,7 @@ def add_score():
         flash(error)
 
     db = get_db()
-    users = db.execute('SELECT username FROM d_user').fetchall()
+    users = db.execute('SELECT username FROM d_user WHERE id != ?', (g.user['id'],)).fetchall()
     return render_template('rank/add_score.html', users=users)
 
 
