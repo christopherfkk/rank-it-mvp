@@ -92,8 +92,9 @@ def add_score():
         # If not show the error message
         flash(error)
 
-    # Else if request method == GET
-    return render_template('rank/add_score.html')
+    db = get_db()
+    users = db.execute('SELECT username FROM d_user').fetchall()
+    return render_template('rank/add_score.html', users=users)
 
 
 @rank.route('/approve-score/<int:match_id>/<int:self_score_id>/<int:opp_score_id>', methods=['GET'])

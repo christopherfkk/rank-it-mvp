@@ -9,15 +9,20 @@
 {% block content %}
   <form method="post">
     <div>
-      <label for="opponent">Opponent:</label>
-      <input type="text" name="opponent" id="opponent" required>
+      <label for="opponent">*Opponent:</label>
+      <input type="text" name="opponent" id="opponent" list="opponentName" required/>
+      <datalist id="opponentName">
+        {% for user in users %}
+          <option>{{ user.username }}</option>
+        {% endfor %}
+      </datalist>
     </div>
     <div>
-      <label for="your-score">Your Score:</label>
+      <label for="your-score">*Your Score:</label>
       <input type="text" name="your-score" id="your-score" required>
     </div>
     <div>
-      <label for="opponent-score">Opponent Score:</label>
+      <label for="opponent-score">*Opponent Score:</label>
       <input type="text" name="opponent-score" id="opponent-score" required>
     </div>
     <input type="submit" value="Submit score">
