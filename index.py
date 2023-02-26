@@ -1,9 +1,7 @@
 import os
 from flask import Flask
 
-from app.db import get_db
-
-db = get_db()
+from app.db import init_db_vercel
 
 
 def create_app(test_config=None):
@@ -41,3 +39,5 @@ def create_app(test_config=None):
 
 
 app = create_app()
+with app.app_context():
+    db = init_db_vercel()
