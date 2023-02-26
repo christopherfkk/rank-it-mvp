@@ -16,6 +16,7 @@ CREATE TABLE d_match (
   self_user_id INTEGER NOT NULL,
   opponent_user_id INTEGER NOT NULL,
   type TEXT NOT NULL DEFAULT 'Singles',
+  is_reviewed INTEGER NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (self_user_id) REFERENCES d_user (id),
   FOREIGN KEY (opponent_user_id) REFERENCES d_user (id)
@@ -27,6 +28,7 @@ CREATE TABLE d_score (
   user_id INTEGER NOT NULL,
   score INTEGER NOT NULL,
   is_winner INTEGER NOT NULL,
+  is_reviewed INTEGER NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (match_id) REFERENCES d_match (id),
   FOREIGN KEY (user_id) REFERENCES d_user (id)
