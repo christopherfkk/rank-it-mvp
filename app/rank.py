@@ -251,3 +251,9 @@ def profile(user_id):
                            won=won,
                            pending_self_approval=pending_self_approval,
                            pending_others_approval=pending_others_approval)
+
+@rank.route('/about', methods=['GET'])
+@login_required
+def about():
+    return render_template('rank/about.html', name=g.user["first_name"])
+

@@ -12,8 +12,9 @@
   <ul>
     {% if g.user %}
       <li><a href="{{ url_for('rank.index') }}">Ranking</a>
-      <li><a href="{{ url_for('rank.add_score') }}">Add score</a>
+      <li><a href="{{ url_for('rank.add_score') }}">Add</a>
       <li><a href="{{ url_for('rank.profile', user_id=g.user['id']) }}">Profile</a>
+    <li><a href="{{ url_for('rank.about', name=g.user['first_name']) }}">About</a>
     {% else %}
       <li><a href="{{ url_for('auth.register') }}">Register</a>
       <li><a href="{{ url_for('auth.login') }}">Log In</a>
