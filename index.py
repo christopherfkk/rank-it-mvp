@@ -11,4 +11,4 @@ with app.app_context():
             conn.execute(text(schema))
             conn.commit()
 
-app.run(host='0.0.0.0', port=8080)
+app.run(debug=True, port=33507)
