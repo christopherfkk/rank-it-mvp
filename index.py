@@ -12,4 +12,5 @@ with app.app_context():
             conn.execute(text(schema))
             conn.commit()
 
-serve(app)
+serve(app, port=5000)
+# app.run()
