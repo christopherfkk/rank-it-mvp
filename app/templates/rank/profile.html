@@ -43,7 +43,7 @@
         You <b style="color:red;"> lost {{ match["self_score"] }}-{{ match["opp_score"] }}</b> to <b>{{ match["opp_username"] }}</b> on <b>{{ match["date"] }}</b>
     {% endif %}
         <ul>
-            <li><a href="{{ url_for('rank.approve_score', match_id=match.match_id, self_score_id=match.self_score_id, opp_score_id=match.opp_score_id) }}">Accept</a></li>
+            <li><a href="{{ url_for('rank.approve_score', match_id=match.match_id, self_score_id=match.self_score_id, opp_score_id=match.opp_score_id) }}" onclick="return confirm('Are you sure?')">Accept</a></li>
         </ul>
     </li>
 {% endfor %}

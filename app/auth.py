@@ -67,11 +67,11 @@ def register():
 
         flash(error)
 
-    else:
-        if 'user_id' in session:
-            return redirect(url_for('rank.index'))
+    # else:
+    #     if 'user_id' in session:
+    #         return redirect(url_for('rank.index'))
 
-        return render_template('auth/register.html')
+    return render_template('auth/register.html')
 
 
 @auth.route('/login', methods=('GET', 'POST'))
@@ -105,11 +105,11 @@ def login():
 
         flash(error)
 
-    else:
-        if 'user_id' in session:
-            return redirect(url_for('rank.index'))
+    # else:
+    #     if 'user_id' in session:
+    #         return redirect(url_for('rank.index'))
 
-        return render_template('auth/login.html')
+    return render_template('auth/login.html')
 
 
 @auth.before_app_request  # registers a function that runs before the view function, no matter what URL is requested.
