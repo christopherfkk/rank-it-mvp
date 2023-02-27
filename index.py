@@ -12,4 +12,4 @@ with app.app_context():
             conn.execute(text(schema))
             conn.commit()
 
-serve(app, host='0.0.0.0', port=5000)
+serve(app)
