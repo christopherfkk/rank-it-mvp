@@ -1,6 +1,7 @@
 from app import create_app
 from sqlalchemy import text
 from app.db import db
+import os
 
 
 app = create_app()
