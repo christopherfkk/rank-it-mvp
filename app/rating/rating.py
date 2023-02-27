@@ -7,6 +7,8 @@ def init_user_rating():
 
 
 def update_rating(self_mu, self_sigma, self_score, opp_mu, opp_sigma, opp_score):
+    print(self_mu, self_sigma, self_score, opp_mu, opp_sigma, opp_score)
+    print(type(self_mu))
 
     # Reconstruct Rating object
     self_r = trueskill.Rating(self_mu, self_sigma)

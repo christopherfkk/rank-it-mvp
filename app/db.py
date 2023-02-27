@@ -3,14 +3,13 @@ import click
 from flask import current_app, g
 from flask_sqlalchemy import SQLAlchemy
 
-
 db = SQLAlchemy()
 
 
-def get_db():
+def get_db_con():
     if 'db' not in g:
-        g.db = db.engine.connect()
-    return g.db
+        g.db_con = db.engine.connect()
+    return g.db_con
 
 # def get_db():
 #     if 'db' not in g:

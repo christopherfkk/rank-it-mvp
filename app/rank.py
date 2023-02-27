@@ -1,10 +1,13 @@
 import sqlite3
+
+import sqlalchemy.engine
 from flask import (Blueprint, flash, g, redirect, render_template, request, url_for)
 from typing import List
+from sqlalchemy import text
 from werkzeug.exceptions import abort
 
 from app.auth import login_required
-# from app.db import get_db
+from app.db import db, get_db_con
 from app.rating.rating import update_rating
 
 rank = Blueprint('rank', __name__)
@@ -16,15 +19,15 @@ def index():
     """ View function for the index page which shows the ranking table """
 
     # Get player ranking from d_skill table in descending order
-    db: sqlite3.Connection = get_db()
-    ranking: List[sqlite3.Row] = db.execute(
+    db_con: sqlalchemy.engine.Connection = get_db_con()
+    ranking: List[sqlalchemy.engine.Row] = db_con.execute(text(
         """
         SELECT du.id as user_id, du.username as name, ds.skill as skill, ds.uncertainty as uncertainty 
         FROM d_skill ds 
         JOIN d_user du 
             ON ds.user_id = du.id 
         ORDER BY skill DESC;
-        """
+        """)
     ).fetchall()
 
     return render_template('rank/index.html', ranking=ranking)
@@ -43,14 +46,14 @@ def add_score():
         opp_score = request.form['opponent-score']
 
         # Handle form response error
-        db = get_db()
+        db_con = get_db_con()
         error = None
-        usernames: List[str] = [row["username"] for row in db.execute('SELECT username FROM d_user').fetchall()]
+        usernames: List[str] = [row.username for row in db_con.execute(text("SELECT username FROM d_user")).fetchall()]
         if not opp_username or not self_score or not opp_score:
             error = 'All entries must be filled.'
         elif opp_username not in usernames:
             error = 'Opponent\'s username does not exist.'
-        elif opp_username == g.user['username']:
+        elif opp_username == g.user.username:
             error = 'Opponent cannot be yourself.'
         elif not self_score.isdigit() or not opp_score.isdigit():
             error = "Your/Opponent score must be an integer."
@@ -63,37 +66,36 @@ def add_score():
             self_score, opp_score = int(self_score), int(opp_score)
 
             # Get opponent user_id
-            opp_ = db.execute(""" SELECT * FROM d_user WHERE username = ?; """, (opp_username,)).fetchone()
+            opp_ = db_con.execute(text(f"SELECT * FROM d_user WHERE username = '{opp_username}';")).fetchone()
 
             # Update d_match table and get match_id
-            match = db.execute(
-                """
+            match = db_con.execute(text(
+                f"""
                 INSERT INTO d_match(self_user_id, opponent_user_id, is_reviewed)
-                VALUES (?, ?, ?)
+                VALUES ({g.user.id}, {opp_.id}, 0)
                 RETURNING id;
-                """,
-                (g.user['id'], opp_['id'], 0),
+                """)
             ).fetchone()
-            db.commit()
+            db_con.commit()
 
             # Update d_score
-            db.execute(
+            db_con.execute(text(
                 """
                 INSERT INTO d_score(match_id, user_id, score, is_winner, is_reviewed)
-                VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)
-                """,
-                (match['id'], g.user['id'], self_score, 1 if self_score > opp_score else 0, 1,  # self score is always reviewed
-                 match['id'], opp_['id'], opp_score, 1 if opp_score > self_score else 0, 0)  # opp score is always pending review
-            )
-            db.commit()
+                VALUES ({}, {} , {}, {}, {}), ({}, {}, {}, {}, {})
+                """.format(
+                    match.id, g.user.id, self_score, 1 if self_score > opp_score else 0, 1,
+                    match.id, opp_.id, opp_score, 1 if opp_score > self_score else 0, 0)
+            ))
+            db_con.commit()
 
-            return redirect(url_for('rank.profile', user_id=g.user['id']))
+            return redirect(url_for('rank.profile', user_id=g.user.id))
 
         # If not show the error message
         flash(error)
 
-    db = get_db()
-    users = db.execute('SELECT username FROM d_user WHERE id != ?', (g.user['id'],)).fetchall()
+    db_con = get_db_con()
+    users = db_con.execute(text(f"SELECT username FROM d_user WHERE id != {g.user.id}")).fetchall()
     return render_template('rank/add_score.html', users=users)
 
 
@@ -102,56 +104,56 @@ def add_score():
 def approve_score(match_id, self_score_id, opp_score_id):
 
     # Update d_score
-    db = get_db()
-    db.execute("""UPDATE d_score SET is_reviewed = 1 WHERE id = ?""",(self_score_id, ))
+    db_con = get_db_con()
+    db_con.execute(text(f"""UPDATE d_score SET is_reviewed = 1 WHERE id = {self_score_id}"""))
 
     # Update d_match
-    db.execute("""UPDATE d_match SET is_reviewed = 1 WHERE id = ?""", (match_id,))
+    db_con.execute(text(f"""UPDATE d_match SET is_reviewed = 1 WHERE id = {match_id}"""))
 
     # Update d_skill
     # Query player 1's user id, current skill, current uncertainty
-    self_ = db.execute(
+    self_ = db_con.execute(text(
         """
         SELECT du.id as user_id, dsk.skill as skill, dsk.uncertainty as uncertainty, dsc.score as score
         FROM d_user as du
         JOIN d_skill dsk on du.id = dsk.user_id
         JOIN d_score dsc on du.id = dsc.user_id 
-        WHERE du.id = ? AND dsc.id = ?
-        """,
-        (g.user["id"], self_score_id)
+        WHERE du.id = {} AND dsc.id = {}
+        """.format(g.user.id, self_score_id))
     ).fetchone()
 
     # Query player 2's user id, current skill, current uncertainty
-    opp_ = db.execute(
+    opp_ = db_con.execute(text(
         """
         SELECT du.id as user_id, dsk.skill as skill, dsk.uncertainty as uncertainty, dsc.score as score
         FROM d_user as du
         JOIN d_skill dsk on du.id = dsk.user_id
         JOIN d_score dsc on du.id = dsc.user_id 
-        WHERE dsc.id = ?
-        """,
-        (opp_score_id,)
+        WHERE dsc.id = {}
+        """.format(opp_score_id))
     ).fetchone()
 
     # Get player 1's and player 2's Rating (i.e. mu = skill, sigma = uncertainty)
-    self_id, self_mu, self_sigma, self_score = self_["user_id"], self_["skill"], self_["uncertainty"], self_["score"]
-    opp_id, opp_mu, opp_sigma, opp_score = opp_["user_id"], opp_["skill"], opp_["uncertainty"], opp_["score"]
+    self_id, self_mu, self_sigma, self_score = self_.user_id, self_.skill, self_.uncertainty, self_.score
+    opp_id, opp_mu, opp_sigma, opp_score = opp_.user_id, opp_.skill, opp_.uncertainty, opp_.score
 
     # Update their rating
     new_self_mu, new_self_sigma, new_opp_mu, new_opp_sigma = update_rating(
-        self_mu, self_sigma, self_score,
-        opp_mu, opp_sigma, opp_score
+        float(self_mu), float(self_sigma), self_score,
+        float(opp_mu), float(opp_sigma), opp_score
     )
 
     # Update d_skill table with player 1
-    db.execute("""UPDATE d_skill SET skill = ?, uncertainty = ? WHERE user_id = ?""",
-               (new_self_mu, new_self_sigma, self_id))
-    db.commit()
+    db_con.execute(text(
+        """UPDATE d_skill SET skill = {}, uncertainty = {} WHERE user_id = {}"""
+            .format(new_self_mu, new_self_sigma, self_id)))
+    db_con.commit()
 
     # Update d_skill table with player 1
-    db.execute("""UPDATE d_skill SET skill = ?, uncertainty = ? WHERE user_id = ?""",
-               (new_opp_mu, new_opp_sigma, opp_id))
-    db.commit()
+    db_con.execute(text(
+        """UPDATE d_skill SET skill = {}, uncertainty = {} WHERE user_id = {}"""
+            .format(new_opp_mu, new_opp_sigma, opp_id)))
+    db_con.commit()
 
     return redirect(url_for('rank.index'))
 
@@ -161,44 +163,42 @@ def approve_score(match_id, self_score_id, opp_score_id):
 def profile(user_id):
     """ View function for the profile page; conditionally renders if user is current user or other """
 
-    db = get_db()
+    db_con = get_db_con()
 
     # Query the username and count how many games played
-    username_game_count = db.execute(
+    game_count = db_con.execute(text(
         """
-        SELECT du.username as username, COUNT(*) as game_count
+        SELECT COUNT(*) as count
         FROM d_score ds
         JOIN d_user du ON du.id = ds.user_id
-        WHERE user_id = ?;
-        """,
-        (user_id,)
+        WHERE user_id = {};
+        """.format(user_id))
     ).fetchone()
-    username, games_played = username_game_count['username'], username_game_count['game_count']
+    games_played = game_count.count
 
     # Query how many games the user won or lost -- 2 sqlite3.Row result
-    history: List[sqlite3.Row] = db.execute(
+    history = db_con.execute(text(
         """
         SELECT is_winner, COUNT(is_winner) AS count
         FROM d_score
-        WHERE user_id = ?
+        WHERE user_id = {}
         GROUP BY is_winner;
-        """,
-        (user_id,)
+        """.format(user_id))
     ).fetchall()
 
     lost, won = 0, 0
     # If user has both won and lost
     if len(history) == 2:
-        lost, won = history[0]["count"], history[1]["count"]
+        lost, won = history[0].count, history[1].count
     # If user has either won or lost
     elif len(history) == 1:
-        if history[0]["is_winner"] == 0:
-            lost = history[0]["count"]
-        elif history[0]["is_winner"] == 1:
-            won = history[0]["count"]
+        if history[0].is_winner == 0:
+            lost = history[0].count
+        elif history[0].is_winner == 1:
+            won = history[0].count
 
     # Query which matches require your approval
-    pending_self_approval = db.execute(
+    pending_self_approval = db_con.execute(text(
         """
         SELECT
             t1.match_id as match_id,
@@ -215,14 +215,13 @@ def profile(user_id):
         JOIN d_user du ON t2.user_id = du.id
         WHERE t1.is_reviewed = 0
             AND t2.is_reviewed = 1
-            AND t1.user_id = ? 
+            AND t1.user_id = {}
             AND t2.user_id != t1.user_id;
-        """,
-        (user_id, )
+        """.format(user_id))
     ).fetchall()
 
     # Query which matches are still waiting on other's approval
-    pending_others_approval = db.execute(
+    pending_others_approval = db_con.execute(text(
         """
         SELECT
             t1.match_id as match_id,
@@ -237,23 +236,24 @@ def profile(user_id):
         JOIN d_user du ON t2.user_id = du.id
         WHERE t1.is_reviewed = 1
             AND t2.is_reviewed = 0 
-            AND t1.user_id = ? 
+            AND t1.user_id = {}
             AND t2.user_id != t1.user_id;
-        """,
-        (user_id, )
+        """
+            .format(user_id))
     ).fetchall()
 
     return render_template('rank/profile.html',
                            user_id=user_id,
-                           username=username,
+                           username=g.user.username,
                            games_played=games_played,
                            lost=lost,
                            won=won,
                            pending_self_approval=pending_self_approval,
                            pending_others_approval=pending_others_approval)
 
+
 @rank.route('/about', methods=['GET'])
 @login_required
 def about():
-    return render_template('rank/about.html', name=g.user["first_name"])
+    return render_template('rank/about.html', name=g.user.first_name)
 
