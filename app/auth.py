@@ -3,9 +3,10 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
-import trueskill
+from sqlalchemy import text
 
-from app.db import get_db
+
+from app.db import db, get_db
 from app.rating.rating import init_user_rating
 
 auth = Blueprint('auth', __name__, url_prefix='/auth')
@@ -18,7 +19,7 @@ def register():
         password = request.form['password']
         first_name = request.form['first_name']
 
-        db = get_db()
+        # db = get_db()
         error = None
         if not username:
             error = 'Username is required.'
@@ -52,7 +53,7 @@ def register():
                 )
                 db.commit()
 
-            except db.IntegrityError:
+            except:
                 error = f"User {username} is already registered."
             else:
 
@@ -102,9 +103,8 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = get_db().execute(
-            'SELECT * FROM d_user WHERE id = ?', (user_id,)
-        ).fetchone()
+        with db.engine.connect() as con:
+            g.user = con.execute(text(f'SELECT * FROM d_user WHERE id = {user_id}')).fetchone()
 
 
 @auth.route('/logout')

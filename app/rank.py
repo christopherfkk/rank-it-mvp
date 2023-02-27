@@ -4,7 +4,7 @@ from typing import List
 from werkzeug.exceptions import abort
 
 from app.auth import login_required
-from app.db import get_db
+# from app.db import get_db
 from app.rating.rating import update_rating
 
 rank = Blueprint('rank', __name__)
