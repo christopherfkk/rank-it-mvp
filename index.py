@@ -4,13 +4,12 @@ from app.db import db
 from waitress import serve
 
 
-if __name__ == "__main__":
-    app = create_app()
-    with app.app_context():
-        with open('app/schema.sql', 'r') as f:
-            schema = f.read()
-            with db.engine.connect() as conn:
-                conn.execute(text(schema))
-                conn.commit()
+app = create_app()
+with app.app_context():
+    with open('app/schema.sql', 'r') as f:
+        schema = f.read()
+        with db.engine.connect() as conn:
+            conn.execute(text(schema))
+            conn.commit()
 
-    serve(app, host='0.0.0.0', port=5000)
+serve(app, host='0.0.0.0', port=5000)
