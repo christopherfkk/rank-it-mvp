@@ -1,7 +1,6 @@
 from app import create_app
 from sqlalchemy import text
 from app.db import db
-from waitress import serve
 
 
 app = create_app()
@@ -12,5 +11,4 @@ with app.app_context():
             conn.execute(text(schema))
             conn.commit()
 
-serve(app, port=5000)
-# app.run()
+app.run()
