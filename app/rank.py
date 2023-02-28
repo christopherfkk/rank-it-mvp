@@ -176,6 +176,15 @@ def profile(user_id):
     ).fetchone()
     games_played = game_count.count
 
+    user = db_con.execute(text(
+        """
+        SELECT username
+        FROM d_user
+        WHERE id = {};
+        """.format(user_id))
+    ).fetchone()
+    username = user.username
+
     # Query how many games the user won or lost -- 2 sqlite3.Row result
     history = db_con.execute(text(
         """
@@ -238,13 +247,12 @@ def profile(user_id):
             AND t2.is_reviewed = 0 
             AND t1.user_id = {}
             AND t2.user_id != t1.user_id;
-        """
-            .format(user_id))
+        """.format(user_id))
     ).fetchall()
 
     return render_template('rank/profile.html',
                            user_id=user_id,
-                           username=g.user.username,
+                           username=username,
                            games_played=games_played,
                            lost=lost,
                            won=won,
