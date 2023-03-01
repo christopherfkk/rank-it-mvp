@@ -22,10 +22,17 @@ def index():
     db_con: sqlalchemy.engine.Connection = get_db_con()
     ranking: List[sqlalchemy.engine.Row] = db_con.execute(text(
         """
-        SELECT du.id as user_id, du.username as name, ds.skill as skill, ds.uncertainty as uncertainty 
-        FROM d_skill ds 
-        JOIN d_user du 
-            ON ds.user_id = du.id 
+        SELECT du.id as user_id,
+               du.username as name,
+               CASE
+                   WHEN ds.skill::int = 25 AND ROUND(ds.uncertainty, 2) = 8.33
+                       THEN 0
+                   ELSE (ds.skill - 2 * ds.uncertainty)
+               END as skill,
+               ds.uncertainty as uncertainty
+        FROM d_skill ds
+        JOIN d_user du
+            ON ds.user_id = du.id
         ORDER BY skill DESC;
         """)
     ).fetchall()
